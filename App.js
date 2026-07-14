@@ -1,20 +1,53 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-export default function App() {
+import LoginScreen from './src/screens/LoginScreen';
+import MainScreen from './src/screens/MainScreen';
+import MypageScreen from './src/screens/MypageScreen';
+import CategoryScreen from './src/screens/CategoryScreen';
+import AddScreen from './src/screens/AddScreen';
+import ChatScreen from './src/screens/ChatScreen';
+import SignupScreen from './src/screens/SignupScreen';
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function TabNavigator() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Tab.Navigator screenOptions={{ headerShown: false}}>
+        <Tab.Screen name="홈" component={MainScreen} />
+        <Tab.Screen name="카테고리" component={CategoryScreen} />
+        <Tab.Screen name="등록" component={AddScreen} />
+        <Tab.Screen name="채팅" component={ChatScreen} />
+        <Tab.Screen name="마이페이지" component={MypageScreen} />
+    </Tab.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Home"
+          component={TabNavigator}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ title: '로그인' }}
+        />
+
+        <Stack.Screen
+          name="Signup"
+          component={SignupScreen}
+          options={{ title: '회원가입' }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
