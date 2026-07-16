@@ -9,6 +9,7 @@ export const signUp = async (email, password, userData) => {
     await setDoc(doc(db, "users", uid), {
         ...userData, 
         email: email,
+        password: password,
         createdAt: new Date(), 
     });
 
