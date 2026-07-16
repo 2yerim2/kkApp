@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Alert, Modal } from "react-native";
+import { signUp } from '../api/signservice';
 
 export default function SignupScreen({navigation}) {
     const [email, setEmail] = useState('');
@@ -11,12 +12,18 @@ export default function SignupScreen({navigation}) {
 
     const [modal, setModal] = useState(false);
 
-    const signupfunc = () => {
+    const signupfunc = async () => {
         if (email === '' || password === '' || nickname === '' || school === '' || major === '' || grade === '') {
             Alert.alert('모든 정보를 입력해 주세요');
         }
-        else {
+        try {
+            await signUp(email, password, { nickname, school, major, grade });
             Alert.alert('회원가입 완료');
+        } catch (error) {
+            if (error.code === 'auth/email-already-in-use') {
+                Alert.alert('회원가입 실패', '이미 가입된 이메일입니다.');
+            }
+            else Alert.alert('회원가입 실패', error.message);
         }
     };
     
