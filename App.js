@@ -10,6 +10,7 @@ import CategoryScreen from './src/screens/CategoryScreen';
 import AddScreen from './src/screens/AddScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import SignupScreen from './src/screens/SignupScreen';
+import EditProfileScreen from './src/screens/EditProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -46,6 +47,12 @@ export default function App() {
           name="Signup"
           component={SignupScreen}
           options={{ title: '회원가입' }}
+        />
+
+        <Stack.Screen
+          name="EditProfile"
+          component={EditProfileScreen}
+          options={{ title: '프로필 수정' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

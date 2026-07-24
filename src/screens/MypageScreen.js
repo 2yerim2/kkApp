@@ -1,10 +1,14 @@
 import React from "react";
-import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
+import { StyleSheet, TouchableOpacity, View, Text, Image, SafeAreaView, SafeAreaViewBase } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 
 export default function MypageScreen({navigation}) {
     const isLoggedIn=false;
 
-    if (!isLoggedIn) {
+    const nickname = '경희대';
+    const profileImg = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400';
+
+    if (isLoggedIn) {
         return (
             <View style={styles.container}>
                 <Text style={styles.ment}>
@@ -19,11 +23,27 @@ export default function MypageScreen({navigation}) {
     }
 
     return (
-        <View>
-            <Text>로그인 완료</Text>
-        </View>
+        <SafeAreaView style={styles.mpcontainer}>
+            <TouchableOpacity
+                style={styles.profileSection}
+                onPress={() => navigation.navigate('EditProfile')}
+                activeOpacity={0.7}
+            >
+                <View style={styles.profileLeft}>
+                    <Image
+                        source={{uri: profileImg}}
+                        style={styles.profileImage}
+                    />
+                    <Text style={styles.nickname}>{nickname}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={22} color="#999" />
+            </TouchableOpacity>
+        </SafeAreaView>
     )
 }
+
+
+
 
 const styles = StyleSheet.create({
     container: {
@@ -54,5 +74,39 @@ const styles = StyleSheet.create({
         color: '#fff', 
         fontSize: 20, 
         fontWeight: '500'
-    }
+    },
+
+    mpcontainer: {
+        flex: 1,
+        backgroundColor: '#fff'
+    },
+
+    profileSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F3F5'
+    },
+
+    profileLeft: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+
+    profileImage: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#E9ECEF'
+    },
+
+    nickname: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#111',
+        marginLeft: 14
+    },
 })
