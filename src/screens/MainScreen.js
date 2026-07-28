@@ -11,11 +11,9 @@ const renderItem = ({item}) => (
 </View>);
 
 const Categories = [
-    {name: '전체', icon: "grid"},
     {name: '서적', icon: "book-outline"},
     {name: '전공 물품', icon: "construct-outline"},
-    {name: '생활용품', icon: "basket-outline"},
-    {name: '굿즈/의류', icon: "sparkles-outline"},
+    {name: '기타', icon: "sparkles-outline"},
 ];
 
 export default function MainScreen() {
@@ -86,7 +84,8 @@ const styles = StyleSheet.create({
 
     categories: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+        gap: 40,
         paddingHorizontal: 20,
         marginVertical: 50
     },

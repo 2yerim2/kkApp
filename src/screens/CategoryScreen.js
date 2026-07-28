@@ -6,8 +6,7 @@ export default function CategoryScreen() {
     const categories = [
         {id: 'books', title: '서적', icon: "book-outline", sub: ['공학/자연', '미술/건축', '음악/체육', '의학/보건', '인문/상경', '사범/교육', '기타']},
         {id: 'major', title: '전공 물품', icon: "construct-outline", sub: ['공학/자연', '미술/건축', '음악/체육', '의학/보건', '인문/상경', '사범/교육', '기타']},
-        {id: 'living', title: '생활용품', icon: "basket-outline", sub: ['가구/가전', '청소/세탁', '식품', '디지털 잡화', '필기구', '기타']},
-        {id: 'goods', title: '굿즈/의류', icon: "sparkles-outline", sub: ['학잠/과잠', '면접/비즈니스', '졸업/스냅 촬영', '굿즈/잡화', '행사 물품', '기타']}
+        {id: 'etc', title: '기타', icon: "sparkles-outline", sub: ['생활용품', '의류', '굿즈', '기타']},
     ];
 
     return (
