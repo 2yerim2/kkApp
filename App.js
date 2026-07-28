@@ -7,10 +7,11 @@ import LoginScreen from './src/screens/LoginScreen';
 import MainScreen from './src/screens/MainScreen';
 import MypageScreen from './src/screens/MypageScreen';
 import CategoryScreen from './src/screens/CategoryScreen';
-import EditProfileScreen from './src/screens/EditProfileScreen';
 import AddScreen from './src/screens/AddScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
+import LikelistScreen from './src/screens/LikelistScreen';
+import SellinglistScreen from './src/screens/SellinglistScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -58,6 +59,18 @@ export default function App() {
           name="Mypage"
           component={MypageScreen}
           options={{ title: '마이페이지' }}
+        />
+
+        <Stack.Screen
+          name="Likelist"
+          component={LikelistScreen}
+          options={{ title: '찜한 상품' }}
+        />
+
+        <Stack.Screen
+          name="Sellinglist"
+          component={SellinglistScreen}
+          options={{ title: '판매 중인 상품' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
