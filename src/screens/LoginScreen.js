@@ -11,6 +11,7 @@ export default function LoginScreen({navigation}) {
             await login(email, password);
             Alert.alert('로그인 완료');
             console.log('success');
+            navigation.navigate('Home');
         } catch (error) {
             console.error("로그인 에러 발생:", error);
             Alert.alert('로그인 실패');

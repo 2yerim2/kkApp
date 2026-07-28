@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity, View, Text, Image, SafeAreaView, SafeArea
 import { Ionicons } from '@expo/vector-icons';
 
 export default function MypageScreen({navigation}) {
-    const isLoggedIn=false;
+    const isLoggedIn=true;
 
     const nickname = '경희대';
     const profileImg = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400';
