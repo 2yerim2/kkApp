@@ -10,6 +10,7 @@ import CategoryScreen from './src/screens/CategoryScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import AddScreen from './src/screens/AddScreen';
 import SignupScreen from './src/screens/SignupScreen';
+import EditProfileScreen from './src/screens/EditProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -52,7 +53,7 @@ export default function App() {
           component={EditProfileScreen}
           options={{ title: '프로필 수정' }}
         />
-
+        
         <Stack.Screen
           name="Mypage"
           component={MypageScreen}
