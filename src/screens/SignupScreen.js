@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Alert,
 import { signUp } from '../api/signservice';
 
 export default function SignupScreen({navigation}) {
+    const [phonenum, setPhonenum] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [nickname, setNickname] = useState('');
@@ -15,10 +16,15 @@ export default function SignupScreen({navigation}) {
     const signupfunc = async () => {
         if (email === '' || password === '' || nickname === '' || school === '' || major === '' || grade === '') {
             Alert.alert('모든 정보를 입력해 주세요');
+            return;
         }
         try {
             await signUp(email, password, { nickname, school, major, grade });
-            Alert.alert('회원가입 완료');
+            Alert.alert('회원가입 완료. \n로그인을 진행해 주세요.',
+                [{
+                    text: '확인', onPress: () => navigation.goBack()
+                }]
+            );
         } catch (error) {
             if (error.code === 'auth/email-already-in-use') {
                 Alert.alert('회원가입 실패', '이미 가입된 이메일입니다.');
@@ -29,6 +35,16 @@ export default function SignupScreen({navigation}) {
     
     return (
         <ScrollView contentContainerStyle={styles.container}>
+            <Text style={styles.label}>전화번호</Text>
+            <TextInput 
+                style={styles.input}
+                placeholder="전화번호 ('-' 제외)"
+                value={phonenum}
+                onChangeText={(text) => setPhonenum(text)}
+                keyboardType="phone-pad"
+                maxLength={11}
+            />
+
             <Text style={styles.label}>이메일</Text>
             <TextInput 
                 style={styles.input}

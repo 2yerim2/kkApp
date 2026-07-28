@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { StyleSheet, TouchableOpacity, TextInput, View, Text, Alert } from "react-native";
 import { login } from '../api/loginservice';
 
@@ -9,9 +9,12 @@ export default function LoginScreen({navigation}) {
     const goLogin = async () => {
         try {
             await login(email, password);
-            Alert.alert('로그인 완료');
+            Alert.alert('로그인 완료', '성공적으로 로그인되었습니다.', 
+                [{
+                    text: '확인', onPress: () => {navigation.goBack();}
+                }]
+            );
             console.log('success');
-            navigation.navigate('Home');
         } catch (error) {
             console.error("로그인 에러 발생:", error);
             Alert.alert('로그인 실패');
@@ -21,7 +24,7 @@ export default function LoginScreen({navigation}) {
     return (
         <View style={styles.container}>
             <TextInput
-            placeholder="아이디"
+            placeholder="이메일"
             value={email}
             onChangeText={(text) => setEmail(text)}
             style={styles.input} />
