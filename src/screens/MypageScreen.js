@@ -1,30 +1,42 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, TouchableOpacity, View, Text, Image, SafeAreaView, ScrollView, Alert } from "react-native";
+import { StyleSheet, TouchableOpacity, View, Text, Image, ScrollView, Alert } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { getUserProfile } from '../api/signinfoservice';
 
 export default function MypageScreen({navigation}) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
+    const [nickname, setNickname] = useState('');
 
     const auth = getAuth();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setIsLoggedIn(true);
                 setUser(currentUser);
-            }
-            else {
+
+                const userData = await getUserProfile(currentUser.uid);
+                if (userData && userData.nickname) {
+                    setNickname(userData.nickname);
+                } else if (currentUser.displayName) {
+                    setNickname(currentUser.displayName);
+                }else {
+                    setNickname('이름 없음');
+                }
+
+            } else {
                 setIsLoggedIn(false);
                 setUser(null);
+                setNickname('');
             }
         });
 
         return () => unsubscribe();
     }, []);
 
-    const nickname = '경희대';
     const profileImg = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400';
 
     const likecount=0;
