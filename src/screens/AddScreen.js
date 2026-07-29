@@ -1,31 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, TextInput, Button, TouchableOpacity, Image, StyleSheet, Alert, ActivityIndicator, Text, ScrollView } from 'react-native';
+import { SafeAreaView, Modal, View, TextInput, Button, TouchableOpacity, Image, StyleSheet, Alert, ActivityIndicator, Text, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { auth, db, storage } from '../api/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+
+const CATEGORY_DATA = {
+    '서적': ['공학/자연', '미술/건축', '음악/체육', '의학/보건', '인문/상경', '사범/교육', '기타'],
+    '전공 물품': ['공학/자연', '미술/건축', '음악/체육', '의학/보건', '인문/상경', '사범/교육', '기타'],
+    '기타': ['생활용품', '의류','굿즈', '기타']
+};
 
 export default function AddScreen() {
     const [user, setUser] = useState(null);
     const [initializing, setInitializing] = useState(true);
     const navigation = useNavigation();
 
+    const route = useRoute();
+    const productData = route.params?.productData;
+    const isEditMode = !!productData;
+
     const [type, setType] = useState(null);
+    const [mainCategory, setMainCategory] = useState(null);
+    const [subCategory, setSubCategory] = useState(null);
     const [title, setTitle] = useState('');
     const [price, setPrice] = useState('');
     const [content, setContent] = useState('');
     const [imageUri, setImageUri] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalStep, setModalStep] = useState('MAIN');
+    const [tempMain, setTempMain] = useState(null);
+
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-            if (initializing) setInitializing(false);
-        });
-        return unsubscribe;
-    }, []);
+        if (productData) {
+            setType(productData.type || null);
+            setMainCategory(productData.mainCategory || null);
+            setSubCategory(productData.subCategory || null);
+            setTitle(productData.title || '');
+            
+            if (productData.price) {setPrice(Number(productData.price).toLocaleString('ko-KR'));}
+            else {setPrice('');}
+            
+            setContent(productData.content || '');
+
+            if (productData.imageUrls && Array.isArray(productData.imageUrls)) {setImageUri(productData.imageUrls);}
+            else if (productData.imageUrl) {setImageUri([productData.imageUrl]);}
+            else {setImageUri([]);}
+        }
+        else {
+            setType(null);
+            setMainCategory(null);
+            setSubCategory(null);
+            setTitle('');
+            setPrice('');
+            setContent('');
+            setImageUri([]);
+        }
+    }, [productData]);
+
+    const openModal = () => {
+        setModalStep('MAIN');
+        setTempMain(null);
+        setModalVisible(true);
+    };
+
+    const selectMainCategory = (mainCat) => {
+        setTempMain(mainCat);
+        setModalStep('SUB');
+    }
+
+    const selectSubCategory = (subCat) => {
+        setMainCategory(tempMain);
+        setSubCategory(subCat);
+        setModalVisible(false);
+    };
 
     const pickImage = async () => {
 
@@ -39,8 +91,6 @@ export default function AddScreen() {
             mediaTypes: ['images'],
             allowsMultipleSelection: true,
             selectionLimit: 5,
-            allowsEditing: true,
-            aspect: [4, 3],
             quality: 0.8,
         });
 
@@ -73,8 +123,13 @@ export default function AddScreen() {
 
     const Upload = async () => {
         if (!type) {
-        Alert.alert('알림', '대여 또는 판매 카테고리를 선택해주세요.');
+        Alert.alert('알림', '대여 또는 판매 방식을 선택해주세요.');
         return;
+        }
+
+        if (!mainCategory || !subCategory) {
+            Alert.alert('알림', '카테고리를 모두 선택해주세요.');
+            return;
         }
 
         if (!title.trim()) {
@@ -112,10 +167,12 @@ export default function AddScreen() {
 
             await addDoc(collection(db, 'posts'), {
                 type: type,
+                mainCategory: mainCategory,
+                subCategory: subCategory,
                 title: title,
                 price: Number(price.replace(/,/g,'')),
                 content: content,
-                imageUrl: imageUrls[0] || null,
+                imageUrls: imageUrls.filter(Boolean),
                 authorUid: user.uid,
                 authorEmail: user.email,
                 school: userData.school,  
@@ -128,7 +185,7 @@ export default function AddScreen() {
             Alert.alert('성공', '게시글이 등록되었습니다.');
             setTitle('');
             setContent('');
-            setImageUri(null);
+            setImageUri([]);
             navigation.goBack();
         } catch (error) {
             console.error(error);
@@ -148,9 +205,14 @@ export default function AddScreen() {
 
     if (!user) {
         return (
-            <View style={styles.center}>
-                <Text style={styles.warningText}>로그인이 필요합니다.</Text>
-                <Button title="로그인" onPress={() => navigation.navigate('Login')} />
+            <View style={styles.loginContainer}>
+                <Text style={styles.ment}>
+                    안전한 대여·판매를 위해{"\n"} 로그인이 필요해요! 
+                </Text>
+                
+                <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.button}>
+                    <Text style={styles.logintext}>로그인/회원가입</Text>
+                </TouchableOpacity>
             </View>
         );
     }
@@ -158,7 +220,7 @@ export default function AddScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <ScrollView contentContainerStyle={styles.container}>
-                <Text style={styles.Title}>카테고리</Text>
+                <Text style={styles.Title}>거래 방식</Text>
                 <View style={styles.typeContainer}>
                     <TouchableOpacity
                         style={[styles.typeButton, type === 'RENT' && styles. typeButtonSelected]}
@@ -174,6 +236,16 @@ export default function AddScreen() {
                         <Text style={[styles.typeText, type === 'SELL' && styles.typeTextSelected]}>판매</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Text style={styles.Title}>카테고리</Text>
+                <TouchableOpacity style={styles.categorySelectButton} onPress={openModal}>
+                    <Text style={[styles.categorySelectText, mainCategory && styles.categorySelectTextActive]}>
+                        {mainCategory && subCategory
+                            ? `${mainCategory} > ${subCategory}`
+                            : '카테고리를 선택하세요'}
+                    </Text>
+                    <Text style={styles.arrowText}>❯</Text>
+                </TouchableOpacity>
 
                 <Text style={styles.Title}>게시물 제목</Text>
                 <TextInput
@@ -235,10 +307,36 @@ export default function AddScreen() {
                     </View>
                 ) : (
                     <TouchableOpacity style={styles.submitButton} onPress={Upload}>
-                        <Text style={styles.submitButtonText}>게시물 등록</Text>
+                        <Text style={styles.submitButtonText}>{isEditMode ? '게시물 수정' : '게시물 등록'}</Text>
                     </TouchableOpacity>
                 )}
             </ScrollView>
+            <Modal visible={modalVisible} animationType='slide' transparent={true}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>
+                            {modalStep === 'MAIN' ? '메인 카테고리' : `${tempMain} > 세부 카테고리`}
+                        </Text>
+
+                        {modalStep === 'MAIN' ? (
+                            Object.keys(CATEGORY_DATA).map((main) => (
+                                <TouchableOpacity key={main} style={styles.modalItem} onPress={() => selectMainCategory(main)}>
+                                    <Text style={styles.modalItemText}>{main}</Text>
+                                </TouchableOpacity>
+                            ))
+                        ) : (
+                            CATEGORY_DATA[tempMain]?.map((sub) => (
+                                <TouchableOpacity key={sub} style={styles.modalItem} onPress={() => selectSubCategory(sub)}>
+                                    <Text style={styles.modalItemText}>{sub}</Text>
+                                </TouchableOpacity>
+                            ))
+                        )}
+                        <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
+                            <Text style={styles.modalCloseText}>닫기</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -252,16 +350,34 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff'
     },
 
-    center: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
+    loginContainer: {
+        flex: 1, 
+        justifyContent: 'flex-start', 
+        alignItems: 'center', 
+        paddingTop: 150 
     },
 
-    warningText: {
-        marginBottom: 15,
-        fontSize: 16,
-        fontWeight: 'bold'
+    ment: {
+        fontSize: 33, 
+        color: 'black', 
+        fontWeight: '600', 
+        marginBottom: 60, 
+        textAlign: 'center', 
+        lineHeight: 50, 
+        letterSpacing: 1 
+    },
+
+    button: {
+        backgroundColor: '#000', 
+        paddingVertical: 20, 
+        paddingHorizontal: 100, 
+        borderRadius: 8
+    },
+
+    logintext: {
+        color: '#fff', 
+        fontSize: 20, 
+        fontWeight: '500'
     },
 
     Title: {
@@ -300,6 +416,34 @@ const styles = StyleSheet.create({
 
     typeTextSelected: {
         color: '#fff'
+    },
+
+    categorySelectButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        padding: 15,
+        backgroundColor: '#fff',
+        marginTop: 3,
+        marginBottom: 10
+    },
+
+    categorySelectText: {
+        fontSize: 15,
+        color: '#999'
+    },
+
+    categorySelectTextActive: {
+        color: '#000',
+        fontWeight: '600'
+    },
+
+    arrowText: {
+        fontSize: 14,
+        color: '#888'
     },
 
     titleInput: {
@@ -353,7 +497,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderWidth: 1,
         borderColor: '#888',
-        border: 'solid',
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
@@ -413,4 +556,50 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+
+    modalOverlay: { 
+        flex: 1, 
+        backgroundColor: 'rgba(0,0,0,0.5)', 
+        justifyContent: 'flex-end' 
+    },
+
+    modalContent: { 
+        backgroundColor: '#fff', 
+        borderTopLeftRadius: 16, 
+        borderTopRightRadius: 16, 
+        padding: 20, 
+        maxHeight: '60%' 
+    },
+
+    modalTitle: { 
+        fontSize: 18, 
+        fontWeight: 'bold', 
+        marginBottom: 15, 
+        textAlign: 'center' 
+    },
+
+    modalItem: { 
+        paddingVertical: 15, 
+        borderBottomWidth: 1, 
+        borderBottomColor: '#eee' 
+    },
+
+    modalItemText: { 
+        fontSize: 16, 
+        textAlign: 'center' 
+    },
+
+    modalCloseButton: { 
+        marginTop: 15, 
+        paddingVertical: 12, 
+        backgroundColor: '#eee', 
+        borderRadius: 8, 
+        alignItems: 'center' 
+    },
+
+    modalCloseText: { 
+        fontSize: 15, 
+        fontWeight: '600', 
+        color: '#333' 
+    }
 });
