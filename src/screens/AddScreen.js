@@ -118,8 +118,10 @@ export default function AddScreen() {
                 imageUrl: imageUrls[0] || null,
                 authorUid: user.uid,
                 authorEmail: user.email,
-                school: userData.school,       // 👈 학교 정보 추가
+                school: userData.school,  
                 major: userData.major,
+                nickname: userData.nickname || '익명',
+                phonenum: userData.phonenum,
                 createdAt: serverTimestamp(),
             });
 
