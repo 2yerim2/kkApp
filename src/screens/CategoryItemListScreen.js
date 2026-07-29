@@ -2,18 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { dummyProducts } from '../data/dummyCatData';
+import { db } from '../api/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 export default function CategoryItemListScreen({route, navigation}) {
     const {mainCategory, subCategory} = route.params;
 
     const [filterType, setFilterType] = useState('ALL');
+    const [products, setProducts] = useState([]);
 
     useEffect(() => {
-        navigation.setOptions({title: `${mainCategory} > ${subCategory}`,});
+        navigation.setOptions({
+            title: `${mainCategory} > ${subCategory}`,
+        });
+
+        fetchProducts();
+
     }, [mainCategory, subCategory]);
 
-    const filteredProducts = dummyProducts.filter((item) => {
+
+    const fetchProducts = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "posts"));
+
+            const postList = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            setProducts(postList);
+
+        } catch(error) {
+            console.error("게시물 불러오기 실패:", error);
+        }
+    };
+    const filteredProducts = products.filter((item) => {
         const matchCategory = item.mainCategory === mainCategory && item.subCategory === subCategory;
         const matchType = filterType === 'ALL' || item.type ===filterType;
         return matchCategory &&matchType
@@ -22,11 +45,26 @@ export default function CategoryItemListScreen({route, navigation}) {
     const renderItem = ({item}) => (
         <TouchableOpacity 
             style={styles.card}
-            onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+            onPress={() => navigation.navigate('Detail', { item })}
         >
-            <View style={styles.imagePlaceholder}>
+            {/* <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={40} color="#a0a0a0" />
-            </View>
+            </View> */}
+
+            {
+            item.imageUrls && item.imageUrls.length > 0 ? (
+                <Image
+                    source={{uri:item.imageUrls[0]}}
+                    style={styles.imagePlaceholder}
+                />
+            )
+            :
+            (
+                <View style={styles.imagePlaceholder}>
+                    <Ionicons name="image-outline" size={40} color="#a0a0a0" />
+                </View>
+            )
+            }
             
             <View style={styles.cardInfo}>
                 <View style={styles.badgeContainer}>

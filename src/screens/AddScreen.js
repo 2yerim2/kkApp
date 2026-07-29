@@ -3,7 +3,7 @@ import { SafeAreaView, Modal, View, TextInput, Button, TouchableOpacity, Image, 
 import * as ImagePicker from 'expo-image-picker';
 import { auth, db, storage } from '../api/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
@@ -34,6 +34,14 @@ export default function AddScreen() {
     const [modalVisible, setModalVisible] = useState(false);
     const [modalStep, setModalStep] = useState('MAIN');
     const [tempMain, setTempMain] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setInitializing(false);
+        });
+        return unsubscribe;
+    }, []);
 
     useEffect(() => {
         if (productData) {
@@ -80,7 +88,6 @@ export default function AddScreen() {
     };
 
     const pickImage = async () => {
-
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permissionResult.granted) {
             Alert.alert('권한 필요', '사진에 접근하려면 갤러리 접근 권한이 필요합니다.');
@@ -108,23 +115,23 @@ export default function AddScreen() {
         if (!uris || uris.length === 0) return [];
         
         const uploadPromises = uris.map(async (uri) => {
-        const response = await fetch(uri);
-        const blob = await response.blob();
+            const response = await fetch(uri);
+            const blob = await response.blob();
 
-        const filename = `posts/${user.uid}_${Date.now()}_${Math.random()}.jpg`;
-        const storageRef = ref(storage, filename);
+            const filename = `posts/${user.uid}_${Date.now()}_${Math.random()}.jpg`;
+            const storageRef = ref(storage, filename);
 
-        await uploadBytes(storageRef, blob);
-        return await getDownloadURL(storageRef);
-    });
+            await uploadBytes(storageRef, blob);
+            return await getDownloadURL(storageRef);
+        });
 
-    return await Promise.all(uploadPromises)
-};
+        return await Promise.all(uploadPromises);
+    };
 
     const Upload = async () => {
         if (!type) {
-        Alert.alert('알림', '대여 또는 판매 방식을 선택해주세요.');
-        return;
+            Alert.alert('알림', '대여 또는 판매 방식을 선택해주세요.');
+            return;
         }
 
         if (!mainCategory || !subCategory) {
@@ -162,10 +169,18 @@ export default function AddScreen() {
             let imageUrls = [];
 
             if (imageUri && imageUri.length > 0) {
-            imageUrls = await uploadImagesToStorage(imageUri);
+                const existingUrls = imageUri.filter((uri) => uri.startsWith('http'));
+                const newUris = imageUri.filter((uri) => !uri.startsWith('http'));
+
+                let uploadedUrls = [];
+                if (newUris.length > 0) {
+                    uploadedUrls = await uploadImagesToStorage(newUris);
+                }
+
+                imageUrls = [...existingUrls, ...uploadedUrls];
             }
 
-            await addDoc(collection(db, 'posts'), {
+            const postData = {
                 type: type,
                 mainCategory: mainCategory,
                 subCategory: subCategory,
@@ -179,19 +194,33 @@ export default function AddScreen() {
                 major: userData.major,
                 nickname: userData.nickname || '익명',
                 phonenum: userData.phonenum,
-                createdAt: serverTimestamp(),
-            });
+            };
 
-            Alert.alert('성공', '게시글이 등록되었습니다.');
+            // 수정 모드와 등록 모드 분기 처리 (중복 addDoc 제거 완료)
+            if (isEditMode && productData?.id) {
+                const postRef = doc(db, 'posts', productData.id);
+                await updateDoc(postRef, {
+                    ...postData,
+                    updatedAt: serverTimestamp(), 
+                });
+                Alert.alert('성공', '게시물이 수정되었습니다.');
+            } else {
+                await addDoc(collection(db, 'posts'), {
+                    ...postData,
+                    createdAt: serverTimestamp(),
+                });
+                Alert.alert('성공', '게시물이 등록되었습니다.');
+            }
+
             setTitle('');
             setContent('');
             setImageUri([]);
             navigation.goBack();
         } catch (error) {
-            console.error(error);
-            Alert.alert('오류', '게시글 등록에 실패했습니다.');
+            console.error('업로드 중 에러 발생:', error);
+            Alert.alert('오류', isEditMode ? '게시물 수정에 실패했습니다.' : '게시물 등록에 실패했습니다.');
         } finally {
-            setLoading(false);
+            setLoading(false); // 어떤 상황에서도 무조건 로딩 해제
         }
     };
 
@@ -223,14 +252,14 @@ export default function AddScreen() {
                 <Text style={styles.Title}>거래 방식</Text>
                 <View style={styles.typeContainer}>
                     <TouchableOpacity
-                        style={[styles.typeButton, type === 'RENT' && styles. typeButtonSelected]}
+                        style={[styles.typeButton, type === 'RENT' && styles.typeButtonSelected]}
                         onPress={() => setType('RENT')}
                     >
                         <Text style={[styles.typeText, type === 'RENT' && styles.typeTextSelected]}>대여</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.typeButton, type === 'SELL' && styles. typeButtonSelected]}
+                        style={[styles.typeButton, type === 'SELL' && styles.typeButtonSelected]}
                         onPress={() => setType('SELL')}
                     >
                         <Text style={[styles.typeText, type === 'SELL' && styles.typeTextSelected]}>판매</Text>
@@ -341,22 +370,20 @@ export default function AddScreen() {
     );
 }
 
-
 const styles = StyleSheet.create({
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     container: {
         paddingHorizontal: 25,
         paddingTop: 30,
         paddingBottom: 100,
         backgroundColor: '#fff'
     },
-
     loginContainer: {
         flex: 1, 
         justifyContent: 'flex-start', 
         alignItems: 'center', 
         paddingTop: 150 
     },
-
     ment: {
         fontSize: 33, 
         color: 'black', 
@@ -366,32 +393,27 @@ const styles = StyleSheet.create({
         lineHeight: 50, 
         letterSpacing: 1 
     },
-
     button: {
         backgroundColor: '#000', 
         paddingVertical: 20, 
         paddingHorizontal: 100, 
         borderRadius: 8
     },
-
     logintext: {
         color: '#fff', 
         fontSize: 20, 
         fontWeight: '500'
     },
-
     Title: {
         marginTop: 20,
         fontSize: 17,
         marginBottom: 10,
         fontWeight: '500'
     },
-
     typeContainer: {
         flexDirection: 'row',
         marginBottom: 10
     },
-
     typeButton: {
         flex: 1,
         paddingVertical: 16,
@@ -402,22 +424,18 @@ const styles = StyleSheet.create({
         marginRight: 8,
         backgroundColor: '#f9f9f9'
     },
-
     typeButtonSelected: {
         backgroundColor: '#000',
         borderColor: '#000'
     },
-
     typeText: {
         fontSize: 17,
         fontWeight: '600',
         color: '#666'
     },
-
     typeTextSelected: {
         color: '#fff'
     },
-
     categorySelectButton: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -430,22 +448,18 @@ const styles = StyleSheet.create({
         marginTop: 3,
         marginBottom: 10
     },
-
     categorySelectText: {
         fontSize: 15,
         color: '#999'
     },
-
     categorySelectTextActive: {
         color: '#000',
         fontWeight: '600'
     },
-
     arrowText: {
         fontSize: 14,
         color: '#888'
     },
-
     titleInput: {
         marginTop: 3,
         borderWidth: 1,
@@ -455,7 +469,6 @@ const styles = StyleSheet.create({
         fontSize: 15,
         marginBottom: 10,
     },
-
     contentInput: {
         marginTop: 3,
         borderWidth: 1,
@@ -467,7 +480,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         textAlignVertical: 'top',
     },
-
     priceInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -477,21 +489,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         backgroundColor: '#fff'
     },
-
     wonsymbol: {
         fontSize: 16,
         fontWeight: '500',
         color: '#333',
         marginRight: 6
     },
-
     priceInput: {
         flex: 1,
         paddingVertical: 12,
         fontSize: 15,
         color: '#000'
     },
-
     imagePickerButton: {
         marginTop: 3,
         marginBottom: 10,
@@ -502,28 +511,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#f9f9f9',
     },
-
     imagePickerText: {
         color: '#555',
         fontWeight: '600',
     },
-
     imageListContainer: {
         marginTop: 12,
         flexDirection: 'row'
     },
-
     imagePreviewWrapper: {
         position: 'relative',
         marginRight: 10
     },
-
     previewImage: {
         width: 90,
         height: 90,
         borderRadius: 8,
     },
-
     removeImageButton: {
         position: 'absolute',
         top: 10,
@@ -535,13 +539,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 15,
     },
-
     removeImageText: {
         color: 'white',
         fontSize: 12,
         fontWeight: 'bold',
     },
-
     submitButton: {
         height: 50,
         backgroundColor: 'black',
@@ -550,19 +552,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 25,
     },
-
     submitButtonText: {
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
     },
-
     modalOverlay: { 
         flex: 1, 
         backgroundColor: 'rgba(0,0,0,0.5)', 
         justifyContent: 'flex-end' 
     },
-
     modalContent: { 
         backgroundColor: '#fff', 
         borderTopLeftRadius: 16, 
@@ -570,25 +569,21 @@ const styles = StyleSheet.create({
         padding: 20, 
         maxHeight: '60%' 
     },
-
     modalTitle: { 
         fontSize: 18, 
         fontWeight: 'bold', 
         marginBottom: 15, 
         textAlign: 'center' 
     },
-
     modalItem: { 
         paddingVertical: 15, 
         borderBottomWidth: 1, 
         borderBottomColor: '#eee' 
     },
-
     modalItemText: { 
         fontSize: 16, 
         textAlign: 'center' 
     },
-
     modalCloseButton: { 
         marginTop: 15, 
         paddingVertical: 12, 
@@ -596,7 +591,6 @@ const styles = StyleSheet.create({
         borderRadius: 8, 
         alignItems: 'center' 
     },
-
     modalCloseText: { 
         fontSize: 15, 
         fontWeight: '600', 

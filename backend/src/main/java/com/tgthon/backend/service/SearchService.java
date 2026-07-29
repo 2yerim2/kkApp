@@ -43,7 +43,13 @@ public class SearchService {
 
             System.out.println("문서 하나 읽음");
 
+            String id = document.getId();
+
             Post post = document.toObject(Post.class);
+
+            if(post.getEmbedding() == null){
+                continue;
+            }
 
             double similarity =
                     CosineSimilarity.calculate(
@@ -51,8 +57,8 @@ public class SearchService {
                             post.getEmbedding()
                     );
 
-            SearchResult result =
-            new SearchResult(
+            SearchResult result = new SearchResult(
+                id,
                 post.getTitle(),
                 post.getCategory(),
                 post.getAuthor(),

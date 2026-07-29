@@ -28,7 +28,7 @@ export default function SearchScreen({ navigation }) {
     try{
 
       const response = await axios.post(
-        "http://192.168.0.13:8080/search",
+        "http://192.168.35.251:8080/search",
         {
           keyword: keyword
         }
@@ -92,7 +92,7 @@ export default function SearchScreen({ navigation }) {
         {
           results.map((post,index)=>(
 
-            <View 
+            <Pressable 
               key={index}
               style={styles.card}
             >
@@ -112,7 +112,7 @@ export default function SearchScreen({ navigation }) {
               </Text>
 
 
-            </View>
+            </Pressable>
 
           ))
         }

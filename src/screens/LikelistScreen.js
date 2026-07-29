@@ -12,7 +12,7 @@ export default function LikelistScreen() {
   const likedCount = wishlist.filter((item) => item.isLiked).length;
 
   const cardPress = (productId) => {
-    navigation.navigate('ProductDetail', {productId});
+    navigation.navigate('Detail', {productId});
   };
 
   const removeLike = (productId) => {
