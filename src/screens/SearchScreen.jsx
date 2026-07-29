@@ -1,0 +1,177 @@
+import React, {useState} from "react";
+import { Button } from "react-native";
+
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  Pressable
+} from "react-native";
+
+import axios from "axios";
+
+
+export default function SearchScreen({ navigation }) {
+
+
+  const [keyword, setKeyword] = useState("");
+  const [results, setResults] = useState([]);
+
+
+  const search = async()=>{
+
+    console.log("검색 버튼 클릭:", keyword);
+
+
+    try{
+
+      const response = await axios.post(
+        "http://192.168.0.13:8080/search",
+        {
+          keyword: keyword
+        }
+      );
+
+
+      console.log(response.data);
+
+      setResults(response.data);
+
+
+    }catch(error){
+
+      console.log("검색 오류:", error);
+
+    }
+
+  };
+
+
+  return (
+
+    <ScrollView>
+
+      <View style={styles.container}>
+
+
+        <Text style={styles.title}>
+          AI 게시물 추천 검색
+        </Text>
+
+
+        <TextInput
+
+          style={styles.input}
+
+          value={keyword}
+
+          onChangeText={setKeyword}
+
+          placeholder="검색어 입력"
+
+        />
+
+
+        <Pressable
+          style={styles.button}
+          onPress={search}
+        >
+          <Text style={styles.buttonText}>
+            검색
+          </Text>
+        </Pressable>
+
+
+        <Text style={styles.subtitle}>
+          추천 결과
+        </Text>
+
+
+        {
+          results.map((post,index)=>(
+
+            <View 
+              key={index}
+              style={styles.card}
+            >
+
+              <Text>
+                {post.title}
+              </Text>
+
+
+              <Text>
+                카테고리 : {post.category}
+              </Text>
+
+
+              <Text>
+                작성자 : {post.author}
+              </Text>
+
+
+            </View>
+
+          ))
+        }
+
+
+      </View>
+
+    </ScrollView>
+
+  );
+
+}
+
+
+
+const styles = StyleSheet.create({
+
+  container:{
+    padding:20
+  },
+
+
+  title:{
+    fontSize:24,
+    marginBottom:20
+  },
+
+
+  subtitle:{
+    fontSize:20,
+    marginTop:20
+  },
+
+
+  input:{
+    borderWidth:1,
+    padding:10,
+    marginBottom:10
+  },
+
+
+  button:{
+    marginTop:10,
+    padding:15,
+    borderWidth:1,
+    alignItems:"center"
+  },
+
+
+  buttonText:{
+    fontSize:16
+  },
+
+
+  card:{
+    marginTop:15,
+    padding:10,
+    borderWidth:1
+  }
+
+
+});
