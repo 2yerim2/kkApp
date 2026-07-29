@@ -14,16 +14,16 @@ export default function SignupScreen({navigation}) {
     const [modal, setModal] = useState(false);
 
     const signupfunc = async () => {
-        if (email === '' || password === '' || nickname === '' || school === '' || major === '' || grade === '') {
+        if (phonenum === '' ||email === '' || password === '' || nickname === '' || school === '' || major === '' || grade === '') {
             Alert.alert('모든 정보를 입력해 주세요');
             return;
         }
         try {
-            await signUp(email, password, { nickname, school, major, grade });
-            Alert.alert('회원가입 완료. \n로그인을 진행해 주세요.',
-                [{
-                    text: '확인', onPress: () => navigation.goBack()
-                }]
+            await signUp(email, password, { phonenum, nickname, school, major, grade });
+            Alert.alert(
+                '회원가입 완료', 
+                '로그인을 진행해 주세요.', 
+                [{ text: '확인', onPress: () => navigation.goBack() }]
             );
         } catch (error) {
             if (error.code === 'auth/email-already-in-use') {
@@ -61,6 +61,8 @@ export default function SignupScreen({navigation}) {
                 value={password}
                 onChangeText={(text) => setPassword(text)}
                 keyboardType="ascii-capable"
+                secureTextEntry={true}
+                autoCapitalize="none"
             />
 
             <Text style={styles.label}>닉네임</Text>

@@ -1,7 +1,8 @@
-import React from 'react';
-import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React ,{ useState, useEffect, useCallback } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { dummyRentProducts, dummySaleProducts } from '../data/dummyData';
+import { fetchUserData, fetchProductsBySchool } from '../api/mainpostservice';
+import { useFocusEffect } from '@react-navigation/native';
 
 const renderItem = ({item}) => (
 <View style={{ width:150, height:250, marginRight:10, marginLeft:10 }}>
@@ -17,6 +18,33 @@ const Categories = [
 ];
 
 export default function MainScreen() {
+    const [rentProducts, setRentProducts] = useState([]);
+    const [saleProducts, setSaleProducts] = useState([]);
+    const [userInfo, setUserInfo] = useState(null);
+    
+    useFocusEffect(
+        useCallback(() => {
+            const loadData = async () => {
+                try {
+                    const userData = await fetchUserData();
+                    if (!userData) return;
+                    
+                    setUserInfo(userData);
+
+                    if (userData.school) {
+                        const { rentProducts, saleProducts } = await fetchProductsBySchool(userData.school);
+                        setRentProducts(rentProducts);
+                        setSaleProducts(saleProducts);
+                    }
+                } catch (error) {
+                    console.error("데이터 로드 실패:", error);
+                }
+            };
+
+            loadData();
+        }, [])
+    );
+
     return (
         <ScrollView style={styles.container}>
 
@@ -42,7 +70,7 @@ export default function MainScreen() {
             <Text style={styles.sectionTitle}>최신 대여 상품</Text>
             <FlatList
             horizontal
-            data={dummyRentProducts}
+            data={rentProducts}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             />
@@ -50,7 +78,7 @@ export default function MainScreen() {
             <Text style={styles.sectionTitle}>최신 판매 상품</Text>
             <FlatList
             horizontal
-            data={dummySaleProducts}
+            data={saleProducts}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             />

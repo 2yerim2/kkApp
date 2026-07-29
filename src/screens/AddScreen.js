@@ -3,7 +3,7 @@ import { SafeAreaView, View, TextInput, Button, TouchableOpacity, Image, StyleSh
 import * as ImagePicker from 'expo-image-picker';
 import { auth, db, storage } from '../api/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigation } from '@react-navigation/native';
 
@@ -54,20 +54,22 @@ export default function AddScreen() {
         setImageUri((prev) => prev.filter((_, index) => index !== indexToRemove));
     };
 
-    const uploadImageToStorage = async (uri) => {
-        if (!uri) return null;
-
+    const uploadImagesToStorage = async (uris) => {
+        if (!uris || uris.length === 0) return [];
+        
+        const uploadPromises = uris.map(async (uri) => {
         const response = await fetch(uri);
         const blob = await response.blob();
 
-        const filename = `posts/${user.uid}_${Date.now()}.jpg`;
+        const filename = `posts/${user.uid}_${Date.now()}_${Math.random()}.jpg`;
         const storageRef = ref(storage, filename);
 
         await uploadBytes(storageRef, blob);
+        return await getDownloadURL(storageRef);
+    });
 
-        const downloadUrl = await getDownloadURL(storageRef);
-        return downloadUrl;
-    };
+    return await Promise.all(uploadPromises)
+};
 
     const Upload = async () => {
         if (!type) {
@@ -91,9 +93,21 @@ export default function AddScreen() {
         setLoading(true);
 
         try {
-            let imageUrl = null;
-            if (imageUri) {
-                imageUrl = await uploadImageToStorage(imageUri);
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            
+            if (!userDocSnap.exists()) {
+                Alert.alert('오류', '유저 정보를 찾을 수 없습니다.');
+                setLoading(false);
+                return;
+            }
+            
+            const userData = userDocSnap.data();
+
+            let imageUrls = [];
+
+            if (imageUri && imageUri.length > 0) {
+            imageUrls = await uploadImagesToStorage(imageUri);
             }
 
             await addDoc(collection(db, 'posts'), {
@@ -101,9 +115,11 @@ export default function AddScreen() {
                 title: title,
                 price: Number(price.replace(/,/g,'')),
                 content: content,
-                imageUrl: imageUrl,
+                imageUrl: imageUrls[0] || null,
                 authorUid: user.uid,
                 authorEmail: user.email,
+                school: userData.school,       // 👈 학교 정보 추가
+                major: userData.major,
                 createdAt: serverTimestamp(),
             });
 
@@ -195,7 +211,7 @@ export default function AddScreen() {
                     <Text style={styles.imagePickerText}>사진 선택</Text>
                 </TouchableOpacity>
 
-                {imageUri.length > 0 && (
+                {imageUri?.length > 0 && (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageListContainer}>
                         {imageUri.map((uri, index) => (
                             <View key={index} style={styles.imagePreviewWrapper}>
