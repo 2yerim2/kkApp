@@ -15,6 +15,8 @@ import EditProfileScreen from './src/screens/EditProfileScreen';
 import LikelistScreen from './src/screens/LikelistScreen';
 import SellinglistScreen from './src/screens/SellinglistScreen';
 import SearchScreen from './src/screens/SearchScreen';
+import CategoryItemListScreen from './src/screens/CategoryItemListScreen';
+import DetailScreen from './src/screens/DetailScreen';
 
 
 const Tab = createBottomTabNavigator();
@@ -130,6 +132,22 @@ export default function App() {
           name="Search"
           component={SearchScreen}
           options={{title:"검색"}}
+        />
+
+        <Stack.Screen
+          name="CategoryItemList"
+          component={CategoryItemListScreen}
+          options={{
+            title:"상품 목록"
+          }}
+        />
+
+        <Stack.Screen
+          name="Detail"
+          component={DetailScreen}
+          options={{
+            title:"상품 상세"
+          }}
         />
 
 

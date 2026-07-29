@@ -1,8 +1,89 @@
-import React from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, SafeAreaView, TouchableOpacity, Linking, Alert, Platform, message } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  ScrollView,
+  SafeAreaView,
+  TouchableOpacity,
+  Linking,
+  Alert,
+  Platform,
+  ActivityIndicator
+} from 'react-native';
+
+import { db } from '../api/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 function DetailScreen({ route }) {
-    const { item } = route.params;
+
+    const { item: initialItem, productId } = route.params || {};
+
+    const [item, setItem] = useState(initialItem || null);
+    const [loading, setLoading] = useState(!initialItem);
+
+    useEffect(() => {
+
+        if (initialItem) return;
+
+        const fetchPost = async () => {
+
+            try {
+
+                const docRef = doc(db, "posts", productId);
+
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+
+                    setItem({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
+
+                } else {
+
+                    Alert.alert("오류", "게시물을 찾을 수 없습니다.");
+
+                }
+
+            } catch (e) {
+
+                console.error(e);
+                Alert.alert("오류", "게시물을 불러오지 못했습니다.");
+
+            } finally {
+
+                setLoading(false);
+
+            }
+
+        };
+
+        fetchPost();
+
+    }, []);
+
+    if (loading) {
+
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color="black" />
+            </View>
+        );
+
+    }
+
+    if (!item) {
+
+        return (
+            <View style={styles.container}>
+                <Text>게시물이 존재하지 않습니다.</Text>
+            </View>
+        );
+
+    }
 
     const sendMessage = () => {
         if(!item.phonenum) {
@@ -29,8 +110,11 @@ function DetailScreen({ route }) {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView>
-                {item.imageUrl ? (
-                    <Image source={{ uri: item.imageUrl }} style={styles.image} />
+                {item.imageUrls && item.imageUrls.length > 0 ? (
+                    <Image
+                        source={{ uri: item.imageUrls[0] }}
+                        style={styles.image}
+                    />
                 ) : (
                     <View style={styles.noImage}>
                         <Text style={styles.noImageText}>이미지가 없습니다.</Text>
