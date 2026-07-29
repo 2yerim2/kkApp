@@ -66,7 +66,6 @@ export default function MainScreen() {
 
             <View style={styles.header}>
                 <Ionicons name="search-outline" size={28} color="black" />
-                <Ionicons name="notifications-outline" size={28} color="black" />
                 <Ionicons name="heart-outline" size={28} color="black" />
             </View>
 
