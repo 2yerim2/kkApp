@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './src/screens/LoginScreen';
+import DetailScreen from './src/screens/DetailScreen';
 import MainScreen from './src/screens/MainScreen';
 import MypageScreen from './src/screens/MypageScreen';
 import CategoryScreen from './src/screens/CategoryScreen';
@@ -72,6 +73,13 @@ export default function App() {
           component={SellinglistScreen}
           options={{ title: '판매 중인 상품' }}
         />
+
+        <Stack.Screen
+          name="Detail" 
+          component={DetailScreen} 
+          options={{ title: '상품 상세' }}
+        />
+      
       </Stack.Navigator>
     </NavigationContainer>
   );

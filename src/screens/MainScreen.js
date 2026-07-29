@@ -2,7 +2,7 @@ import React ,{ useState, useEffect, useCallback } from 'react';
 import { SafeAreaView, StyleSheet, View, Text, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchUserData, fetchProductsBySchool } from '../api/mainpostservice';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const renderItem = ({item}) => (
 <View style={{ width:150, height:250, marginRight:10, marginLeft:10 }}>
@@ -18,6 +18,7 @@ const Categories = [
 ];
 
 export default function MainScreen() {
+    const navigation = useNavigation();
     const [rentProducts, setRentProducts] = useState([]);
     const [saleProducts, setSaleProducts] = useState([]);
     const [userInfo, setUserInfo] = useState(null);
@@ -43,6 +44,21 @@ export default function MainScreen() {
 
             loadData();
         }, [])
+    );
+
+    const renderItem = ({ item }) => (
+        <TouchableOpacity 
+            style={{ width: 150, height: 250, marginRight: 10, marginLeft: 10 }}
+            onPress={() => navigation.navigate('Detail', { item })}
+        >
+            <Image source={{ uri: item.imageUrl }} style={{ width: 150, height: 150, borderRadius: 6 }} />
+            <Text numberOfLines={2} ellipsizeMode='tail' style={{ fontSize: 16, lineHeight: 20, height: 38, marginTop: 8 }}>
+                {item.title}
+            </Text>
+            <Text style={{ fontSize: 20, fontWeight: '600' }}>
+                {item.price?.toLocaleString()}원
+            </Text>
+        </TouchableOpacity>
     );
 
     return (
