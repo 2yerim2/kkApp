@@ -1,13 +1,11 @@
 import React from 'react';
 import './src/api/firebase';
-import { View } from 'react-native';
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
 import LoginScreen from './src/screens/LoginScreen';
-import DetailScreen from './src/screens/DetailScreen';
 import MainScreen from './src/screens/MainScreen';
 import MypageScreen from './src/screens/MypageScreen';
 import CategoryScreen from './src/screens/CategoryScreen';
@@ -16,104 +14,127 @@ import SignupScreen from './src/screens/SignupScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import LikelistScreen from './src/screens/LikelistScreen';
 import SellinglistScreen from './src/screens/SellinglistScreen';
-import CategoryItemListScreen from './src/screens/CategoryItemListScreen';
+import SearchScreen from './src/screens/SearchScreen';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+
 function TabNavigator() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false}}>
-        <Tab.Screen name="홈" component={MainScreen} />
-        <Tab.Screen name="카테고리" component={CategoryScreen} />
-        <Tab.Screen
-          name="등록"
-          component={View}
-          listeners={({navigation}) => ({
-            tabPress: (e) => {
-              e.preventDefault();
-              navigation.navigate('AddModal');
-            },
-          })}
-        />
-        <Tab.Screen name="마이페이지" component={MypageScreen} />
+    <Tab.Navigator 
+      screenOptions={{ 
+        headerShown: false 
+      }}
+    >
+      <Tab.Screen 
+        name="홈" 
+        component={MainScreen} 
+      />
+
+      <Tab.Screen 
+        name="검색" 
+        component={SearchScreen} 
+      />
+
+      <Tab.Screen 
+        name="카테고리" 
+        component={CategoryScreen} 
+      />
+
+      <Tab.Screen 
+        name="등록" 
+        component={AddScreen} 
+      />
+
+      <Tab.Screen 
+        name="마이페이지" 
+        component={MypageScreen} 
+      />
+
     </Tab.Navigator>
   );
 }
 
+
 export default function App() {
   return (
-    <ActionSheetProvider>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="Home"
-            component={TabNavigator}
-            options={{ headerShown: false }}
-          />
+    <NavigationContainer>
 
-          <Stack.Screen
-            name="AddModal"
-            component={AddScreen}
-            options={{
-              headerShown: false,
-              presentation: 'modal',
-            }}
-          />
+      <Stack.Navigator>
 
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ title: '로그인' }}
-          />
-
-          <Stack.Screen
-            name="Signup"
-            component={SignupScreen}
-            options={{ title: '회원가입' }}
-          />
-
-          <Stack.Screen
-            name="EditProfile"
-            component={EditProfileScreen}
-            options={{ title: '프로필 수정' }}
-          />
-          
-          <Stack.Screen
-            name="Mypage"
-            component={MypageScreen}
-            options={{ title: '마이페이지' }}
-          />
-
-          <Stack.Screen
-            name="Likelist"
-            component={LikelistScreen}
-            options={{ title: '찜한 상품' }}
-          />
-
-          <Stack.Screen
-            name="Sellinglist"
-            component={SellinglistScreen}
-            options={{ title: '판매 중인 상품' }}
-          />
-
-          <Stack.Screen 
-            name="Category" 
-            component={CategoryScreen} 
-            options={{ title: '카테고리' }}
-          />
-          <Stack.Screen 
-            name="CategoryItemList" 
-            component={CategoryItemListScreen} 
-          />
-
-          <Stack.Screen
-          name="Detail" 
-          component={DetailScreen} 
-          options={{ title: '상품 상세' }}
+        <Stack.Screen
+          name="Home"
+          component={TabNavigator}
+          options={{ 
+            headerShown: false 
+          }}
         />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </ActionSheetProvider>
+
+
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ 
+            title: '로그인' 
+          }}
+        />
+
+
+        <Stack.Screen
+          name="Signup"
+          component={SignupScreen}
+          options={{ 
+            title: '회원가입' 
+          }}
+        />
+
+
+        <Stack.Screen
+          name="EditProfile"
+          component={EditProfileScreen}
+          options={{ 
+            title: '프로필 수정' 
+          }}
+        />
+
+
+        <Stack.Screen
+          name="Mypage"
+          component={MypageScreen}
+          options={{ 
+            title: '마이페이지' 
+          }}
+        />
+
+
+        <Stack.Screen
+          name="Likelist"
+          component={LikelistScreen}
+          options={{ 
+            title: '찜한 상품' 
+          }}
+        />
+
+
+        <Stack.Screen
+          name="Sellinglist"
+          component={SellinglistScreen}
+          options={{ 
+            title: '판매 중인 상품' 
+          }}
+        />
+
+        <Stack.Screen
+          name="Search"
+          component={SearchScreen}
+          options={{title:"검색"}}
+        />
+
+
+      </Stack.Navigator>
+
+    </NavigationContainer>
   );
 }
