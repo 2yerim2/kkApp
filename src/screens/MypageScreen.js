@@ -37,7 +37,7 @@ export default function MypageScreen({navigation}) {
         return () => unsubscribe();
     }, []);
 
-    const profileImg = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400';
+    const profileImg = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
     const likecount=0;
     const sellingcount=0;
@@ -98,8 +98,7 @@ export default function MypageScreen({navigation}) {
                         activeOpacity={0.7}
                     >
                         <Ionicons name="heart-outline" size={30} color="#FF4B4B" />
-                        <Text style={{fontSize: 15, fontWeight: '600', color: '#495057', marginTop: 10,}}>찜한 상품</Text>
-                        <Text style={{fontSize: 18, fontWeight: 'bold', color: '#111', marginTop: 6,}}>0</Text>
+                        <Text style={{fontSize: 15, fontWeight: 'bold', color: '#495057', marginTop: 10,}}>찜한 상품</Text>
                     </TouchableOpacity>
                     <View style={styles.divideline} />
                     <TouchableOpacity
@@ -108,8 +107,7 @@ export default function MypageScreen({navigation}) {
                         activeOpacity={0.7}
                     >
                         <Ionicons name="cube-outline" size={30} color="#34C759" />
-                        <Text style={{fontSize: 15, fontWeight: '600', color: '#495057', marginTop: 10,}}>판매 중인 상품</Text>
-                        <Text style={{fontSize: 18, fontWeight: 'bold', color: '#111', marginTop: 6,}}>0</Text>
+                        <Text style={{fontSize: 15, fontWeight: 'bold', color: '#495057', marginTop: 10,}}>판매 중인 상품</Text>
                     </TouchableOpacity>
                 </View>
 
