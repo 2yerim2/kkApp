@@ -4,6 +4,7 @@ import './src/api/firebase';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 
 import LoginScreen from './src/screens/LoginScreen';
 import MainScreen from './src/screens/MainScreen';
@@ -26,9 +27,34 @@ const Stack = createNativeStackNavigator();
 function TabNavigator() {
   return (
     <Tab.Navigator 
-      screenOptions={{ 
-        headerShown: false 
-      }}
+      screenOptions={({route}) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          switch (route.name) {
+            case '홈':
+              iconName = focused ? 'home' : 'home-outline';
+              break;
+            case '검색':
+              iconName = focused ? 'search' : 'search-outline';
+              break;
+            case '카테고리':
+              iconName = focused ? 'grid' : 'grid-outline';
+              break;
+            case '등록':
+              iconName = focused ? 'add-circle' : 'add-circle-outline';
+              break;
+            case '마이페이지':
+              iconName = focused ? 'person' : 'person-outline';
+              break;
+            default:
+              iconName = 'ellipse-outline';  
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#000000',
+        tabBarInactiveTintColor: '#8E8E93'
+      })}
     >
       <Tab.Screen 
         name="홈" 
@@ -37,7 +63,13 @@ function TabNavigator() {
 
       <Tab.Screen 
         name="검색" 
-        component={SearchScreen} 
+        component={MainScreen}
+        listeners={({navigation}) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Search');
+          },
+        })} 
       />
 
       <Tab.Screen 
@@ -63,9 +95,7 @@ function TabNavigator() {
 export default function App() {
   return (
     <NavigationContainer>
-
       <Stack.Navigator>
-
         <Stack.Screen
           name="Home"
           component={TabNavigator}
@@ -73,7 +103,6 @@ export default function App() {
             headerShown: false 
           }}
         />
-
 
         <Stack.Screen
           name="Login"
@@ -83,7 +112,6 @@ export default function App() {
           }}
         />
 
-
         <Stack.Screen
           name="Signup"
           component={SignupScreen}
@@ -91,7 +119,6 @@ export default function App() {
             title: '회원가입' 
           }}
         />
-
 
         <Stack.Screen
           name="EditProfile"
@@ -101,7 +128,6 @@ export default function App() {
           }}
         />
 
-
         <Stack.Screen
           name="Mypage"
           component={MypageScreen}
@@ -110,7 +136,6 @@ export default function App() {
           }}
         />
 
-
         <Stack.Screen
           name="Likelist"
           component={LikelistScreen}
@@ -118,7 +143,6 @@ export default function App() {
             title: '찜한 상품' 
           }}
         />
-
 
         <Stack.Screen
           name="Sellinglist"
@@ -149,10 +173,7 @@ export default function App() {
             title:"상품 상세"
           }}
         />
-
-
       </Stack.Navigator>
-
     </NavigationContainer>
   );
 }

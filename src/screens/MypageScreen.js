@@ -4,12 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { getUserProfile } from '../api/signinfoservice';
+import { useIsFocused } from '@react-navigation/native';
+
+const DEFAULT_PROFILE_IMG = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
 export default function MypageScreen({navigation}) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const [nickname, setNickname] = useState('');
+    const [profileImageUrl, setProfileImageUrl] = useState(DEFAULT_PROFILE_IMG);
 
+    const isFocused = useIsFocused();
     const auth = getAuth();
 
     useEffect(() => {
@@ -19,6 +24,7 @@ export default function MypageScreen({navigation}) {
                 setUser(currentUser);
 
                 const userData = await getUserProfile(currentUser.uid);
+
                 if (userData && userData.nickname) {
                     setNickname(userData.nickname);
                 } else if (currentUser.displayName) {
@@ -27,20 +33,22 @@ export default function MypageScreen({navigation}) {
                     setNickname('이름 없음');
                 }
 
+                if (userData && userData.profileImage) {
+                    setProfileImageUrl(userData.profileImage);
+                } else {
+                    setProfileImageUrl(DEFAULT_PROFILE_IMG);
+                }
+
             } else {
                 setIsLoggedIn(false);
                 setUser(null);
                 setNickname('');
+                setProfileImageUrl(DEFAULT_PROFILE_IMG);
             }
         });
 
         return () => unsubscribe();
-    }, []);
-
-    const profileImg = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-
-    const likecount=0;
-    const sellingcount=0;
+    }, [isFocused]);
 
     const handleLogout = () => {
         Alert.alert(
@@ -76,7 +84,7 @@ export default function MypageScreen({navigation}) {
                 <View style={styles.profileSection}>
                     <View style={styles.topRow}>
                         <Image
-                            source={{uri: profileImg}}
+                            source={{uri: profileImageUrl}}
                             style={styles.profileImage}
                         />
                         <Text style={styles.nickname}>{nickname} 님</Text>
@@ -120,9 +128,6 @@ export default function MypageScreen({navigation}) {
         </SafeAreaView>
     )
 }
-
-
-
 
 const styles = StyleSheet.create({
     container: {

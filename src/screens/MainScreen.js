@@ -1,94 +1,112 @@
-import React ,{ useState, useEffect, useCallback } from 'react';
-import { SafeAreaView, StyleSheet, View, Text, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchUserData, fetchProductsBySchool } from '../api/mainpostservice';
 import { useFocusEffect } from '@react-navigation/native';
-import { Button } from "react-native";
-
-const renderItem = ({item}) => (
-<View style={{ width:150, height:250, marginRight:10, marginLeft:10 }}>
-    <Image source={{uri: item.imageUrl}} style={{ width:150, height:150, borderRadius:6 }} />
-    <Text numberOfLines={2} ellipsizeMode='tail' style={{ fontSize:16, lineHeight:20, height:38, marginTop:8 }}>{item.title}</Text>
-    <Text style={{ fontSize:20, fontWeight:'600' }}>{item.price.toLocaleString()}원</Text>
-</View>);
-
-const Categories = [
-    {name: '서적', icon: "book-outline"},
-    {name: '전공 물품', icon: "construct-outline"},
-    {name: '기타', icon: "sparkles-outline"},
-];
 
 export default function MainScreen({navigation}) {
     const [rentProducts, setRentProducts] = useState([]);
     const [saleProducts, setSaleProducts] = useState([]);
     const [userInfo, setUserInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
     
     useFocusEffect(
         useCallback(() => {
             const loadData = async () => {
                 try {
-                    const userData = await fetchUserData();
-                    if (!userData) return;
-                    
-                    setUserInfo(userData);
+                    if (rentProducts.length === 0 && saleProducts.length === 0) {
+                        setLoading(true);
+                    }
 
-                    if (userData.school) {
+                    const userData = await fetchUserData();
+
+                    if (userData && userData.school) {
                         const { rentProducts, saleProducts } = await fetchProductsBySchool(userData.school);
-                        setRentProducts(rentProducts);
-                        setSaleProducts(saleProducts);
+                        setRentProducts(rentProducts ? [...rentProducts] : []);
+                        setSaleProducts(saleProducts ? [...saleProducts] : []);
                     }
                 } catch (error) {
                     console.error("데이터 로드 실패:", error);
+                } finally {
+                    setLoading(false);
                 }
             };
 
             loadData();
-        }, [])
+        }, [rentProducts.length, saleProducts.length])
     );
+
+    const renderItem = ({ item }) => {
+        if (!item) return null;
+
+        const hasImage = item.imageUrls && item.imageUrls.length > 0;
+        const imageSource = hasImage
+            ? { uri: item.imageUrls[0] } 
+            : { uri: 'https://dummyimage.com/150x150/cccccc/ffffff.png&text=No+Image' };
+
+        const isRent = item.type === 'RENT';
+        const formattedPrice = `${item.price ? item.price.toLocaleString() : 0}원${isRent ? ' / 일' : ''}`;
+
+        return (
+            <TouchableOpacity 
+                style={styles.itemContainer} 
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate("Detail", { item: item })}
+            >
+                <Image 
+                    source={imageSource} 
+                    style={styles.itemImage}
+                    resizeMode="cover"
+                />
+                <Text numberOfLines={2} ellipsizeMode='tail' style={styles.itemTitle}>
+                    {item.title || '제목 없음'}
+                </Text>
+                <Text style={styles.itemPrice}>
+                    {formattedPrice}
+                </Text>
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <ScrollView style={styles.container}>
-
             <View style={styles.header}>
-                <Ionicons name="search-outline" size={28} color="black" />
-                <Ionicons name="heart-outline" size={28} color="black" />
-            </View>
+                <TouchableOpacity onPress={() => navigation.navigate("Search")}>
+                    <Ionicons name="search-outline" size={28} color="black" />
+                </TouchableOpacity>
 
-            <View style={styles.categories}>
-                {Categories.map((item) => {
-                    return (
-                        <TouchableOpacity key={item.name} style={styles.categoriesButton}>
-                            <Ionicons name={item.icon} size={30} color="black" />
-                            <Text style={{ fontSize:13, fontWeight:'600' }}>
-                                {item.name}
-                            </Text>
-                        </TouchableOpacity>
-                    )
-                })}
+                <TouchableOpacity onPress={() => navigation.navigate("Likelist")}>
+                    <Ionicons name="heart-outline" size={28} color="black" />
+                </TouchableOpacity>
             </View>
 
             <Text style={styles.sectionTitle}>최신 대여 상품</Text>
-            <FlatList
-            horizontal
-            data={rentProducts}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            />
+            {loading ? (
+                <ActivityIndicator size='small' color='#888' style={{marginVertical: 20}} />
+            ) : (
+                <FlatList
+                    horizontal
+                    data={rentProducts}
+                    renderItem={renderItem}
+                    keyExtractor={(item, index) => item?.id ? item.id.toString() : index.toString()}
+                    extraData={rentProducts}
+                    showsHorizontalScrollIndicator={false}
+                />
+            )}
 
             <Text style={styles.sectionTitle}>최신 판매 상품</Text>
-            <FlatList
-            horizontal
-            data={saleProducts}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            />
-
-            <Button
-            title="검색"
-            onPress={() =>
-            navigation.navigate("검색")
-            }
-            />
+            {loading ? (
+                <ActivityIndicator size='small' color='#888' style={{marginVertical: 20}} />
+            ) : (
+                <FlatList
+                    horizontal
+                    data={saleProducts}
+                    renderItem={renderItem}
+                    keyExtractor={(item, index) => item?.id ? item.id.toString() : index.toString()}
+                    extraData={saleProducts}
+                    showsHorizontalScrollIndicator={false}
+                />
+            )}
         </ScrollView>
     );
 }
@@ -106,7 +124,7 @@ const styles = StyleSheet.create({
         columnGap: 10,
         paddingTop:75,
         paddingRight: 20,
-        paddingBottom: 70
+        paddingBottom: 20
     },
 
     sectionTitle: {
@@ -117,21 +135,31 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
 
-    categories: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 40,
-        paddingHorizontal: 20,
-        marginVertical: 50
+    itemContainer: {
+        width: 150,
+        marginHorizontal: 10,
+        marginBottom: 20,
     },
 
-    categoriesButton: {
-        width: 60,
-        height: 60,
-        backgroundColor: '#f1f3f5',
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        rowGap: 3
-    }
+    itemImage: {
+        width: 150,
+        height: 150,
+        borderRadius: 8,
+        backgroundColor: '#f1f3f5'
+    },
+
+    itemTitle: {
+        fontSize: 15,
+        lineHeight: 20,
+        height: 40,
+        marginTop: 8,
+        color: '#333'
+    },
+
+    itemPrice: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginTop: 4,
+        color: '#000'
+    },
 });
