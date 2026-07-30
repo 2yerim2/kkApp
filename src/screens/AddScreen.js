@@ -196,7 +196,6 @@ export default function AddScreen() {
                 phonenum: userData.phonenum,
             };
 
-            // 수정 모드와 등록 모드 분기 처리 (중복 addDoc 제거 완료)
             if (isEditMode && productData?.id) {
                 const postRef = doc(db, 'posts', productData.id);
                 await updateDoc(postRef, {
@@ -220,7 +219,7 @@ export default function AddScreen() {
             console.error('업로드 중 에러 발생:', error);
             Alert.alert('오류', isEditMode ? '게시물 수정에 실패했습니다.' : '게시물 등록에 실패했습니다.');
         } finally {
-            setLoading(false); // 어떤 상황에서도 무조건 로딩 해제
+            setLoading(false);
         }
     };
 

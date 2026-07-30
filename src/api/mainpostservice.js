@@ -1,11 +1,25 @@
 import { auth, db } from '../api/firebase';
 import { doc, getDoc, collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+
+const getCurrentUser = () => {
+    return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            unsubscribe();
+            resolve(user);
+        });
+    });
+};
 
 export const fetchUserData = async () => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return null;
-
     try {
+        const currentUser = await getCurrentUser();
+
+        if (!currentUser) {
+            console.log("로그인된 유저가 없습니다.");
+            return null;
+        }
+
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
